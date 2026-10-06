@@ -9,14 +9,34 @@ status=0
 warnings=()
 
 usage() {
-    printf 'Usage: %s [-v|--verbose] [THRESHOLD]\n' "${0##*/}"
+    printf 'Usage: %s [-v|--verbose] [--hosts HOST1,HOST2,...] [THRESHOLD]\n' "${0##*/}"
     printf 'Notify when / usage reaches THRESHOLD percent (1-100, default: 90).\n'
+    printf 'Default hosts: panda1gpu5090,panda3gpu5090,cs-ws43\n'
 }
 
-for arg in "$@"; do
+while (( $# > 0 )); do
+    arg=$1
     case "$arg" in
         -v|--verbose) verbose=true ;;
         -h|--help) usage; exit 0 ;;
+        --hosts)
+            if (( $# < 2 )) || [[ -z $2 || $2 == ,* || $2 == *, || $2 == *,,* ]]; then
+                printf 'ERROR: --hosts requires a comma-separated list of hosts\n' >&2
+                exit 2
+            fi
+            IFS=, read -r -a hosts <<< "$2"
+            if [[ $2 == *[[:space:]]* ]]; then
+                printf 'ERROR: host names must not contain whitespace\n' >&2
+                exit 2
+            fi
+            for host in "${hosts[@]}"; do
+                if [[ $host == -* ]]; then
+                    printf 'ERROR: host names must not start with "-"\n' >&2
+                    exit 2
+                fi
+            done
+            shift
+            ;;
         *)
             if $threshold_given || [[ ! $arg =~ ^[0-9]{1,3}$ ]] ||
                 (( 10#$arg < 1 || 10#$arg > 100 )); then
@@ -28,6 +48,7 @@ for arg in "$@"; do
             threshold_given=true
             ;;
     esac
+    shift
 done
 
 for host in "${hosts[@]}"; do
