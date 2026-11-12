@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Check the filesystem mounted at / on each host, using existing SSH settings.
-hosts=(panda1gpu5090 panda3gpu5090 cs-ws43)
+hosts=(panda1gpu5090 panda3gpu5090 panda4gpu5090 cs-ws43)
 threshold=90
 threshold_given=false
 verbose=false
